@@ -1,0 +1,3 @@
+curl -v -L https://lre.mrshmc.com/Loadtest/rest/authentication-point/authenticate-client \
+  -H "Content-Type: application/json" \
+  -d '{"ClientID":"your-id","ClientSecret":"your-secret"}'
