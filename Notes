@@ -1,3 +1,12 @@
 curl -v -L https://lre.mrshmc.com/Loadtest/rest/authentication-point/authenticate-client \
   -H "Content-Type: application/json" \
   -d '{"ClientID":"your-id","ClientSecret":"your-secret"}'
+
+
+$pair = "$($clientId):$($clientSecret)"
+$bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
+$b64 = [Convert]::ToBase64String($bytes)
+
+curl.exe -v -L "https://lre.mrshmc.com/Loadtest/rest/authentication-point/authenticate-client" `
+  -H "Authorization: Basic $b64" `
+  -H "Content-Type: application/json"
