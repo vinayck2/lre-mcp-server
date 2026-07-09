@@ -1,0 +1,106 @@
+## 👍 No problem—let’s work with what you *can* provide
+
+Even without the full `.har`, we can still generate solid LoadRunner correlation by using **small extracted snippets** from the HAR (you can paste them as text).  
+
+### ✅ What to paste (minimum)
+Please copy/paste these from your HAR log (redact secrets/passwords):
+
+1. **Login request entry**
+   - the `request` block (method + url)
+   - request headers (especially `Content-Type`, `Cookie`, `Authorization`)
+   - request body (if present: form fields)
+
+2. **Login response entry**
+   - response `status`
+   - response `headers` (especially any `Set-Cookie`)
+   - response `content.text` (if it’s HTML and contains hidden inputs/tokens)
+
+3. **The next request after login**
+   - the one that fails without correlation (e.g., `/books`, `/cart`, or dashboard)
+   - include its `headers` and `queryString/body` if any
+
+That’s enough for the agent to:
+- detect token/cookie reuse points
+- decide what to correlate vs leave static
+- generate deterministic `web_reg_save_param(_ex)` code
+
+---
+
+## 🧩 If you can’t find “login POST” yet—use this quick guidance
+For your demo webshop, look for:
+- a POST to something like `/login` (or `/login/`, or an endpoint ending in `/login`)
+- request body containing fields like:
+  - `Email` / `Password` / `RememberMe`
+- response containing either:
+  - `Set-Cookie: ...` headers
+  - and/or HTML containing hidden inputs such as:
+    - `__RequestVerificationToken`
+    - `csrf`
+
+---
+
+## 🧪 Paste-ready template (copy & fill)
+Reply with the following (redact values):
+
+### A) Login request
+```json
+{
+  "request": {
+    "method": "POST",
+    "url": "https://demowebshop.tricentis.com/... ",
+    "headers": [
+      {"name":"Content-Type","value":"..."},
+      {"name":"Cookie","value":"..."}
+    ],
+    "body": {"text": "Email=...&Password=...&..."}
+  }
+}
+```
+
+### B) Login response
+```json
+{
+  "response": {
+    "status": 200,
+    "headers": [
+      {"name":"Set-Cookie","value":"SESSIONID=...; ..."},
+      {"name":"Set-Cookie","value":".AspNetCore.Cookies=...; ..."}
+    ],
+    "content": {"text": "<html> ... __RequestVerificationToken ... </html>"}
+  }
+}
+```
+
+### C) First request after login
+```json
+{
+  "request": {
+    "method": "GET",
+    "url": "https://demowebshop.tricentis.com/books",
+    "headers": [
+      {"name":"Cookie","value":"SESSIONID=..."},
+      {"name":"Accept","value":"..."}
+    ]
+  }
+}
+```
+
+---
+
+## 🎯 What I’ll do once you paste that
+I will generate:
+
+- **Correlation variable plan** (cookie/CSRF/JSON/header candidates)
+- **Example LoadRunner correlation code** using:
+  - `web_reg_save_param_ex` (when value comes from HTML/JSON)
+  - cookie capture / injection logic
+- **A “don’t over-correlate” policy** (so we avoid unnecessary variables)
+- A short **validation checklist** (what to verify in replays)
+
+---
+
+## 🔎 Quick question (helps me choose the right extraction type)
+When you login in the browser, do you see a hidden field like `__RequestVerificationToken` in the login page HTML?  
+- **Yes / No / Not sure**
+
+Reply with the snippets above and your answer, and we’ll get you to working correlation quickly 🚀.
